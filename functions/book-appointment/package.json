@@ -5,6 +5,6 @@
   "type": "module",
   "main": "src/main.js",
   "dependencies": {
-    "appwrite": "^21.5.0"
+    "node-appwrite": "^21.5.0"
   }
 }

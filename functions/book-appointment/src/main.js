@@ -16,7 +16,7 @@
 // that date (0-based). incrementRowColumn(max = daily_limit) both assigns the
 // serial atomically and enforces the daily cap.
 
-import { Client, TablesDB, Query, ID, Permission, Role } from "appwrite";
+import { Client, TablesDB, Query, ID, Permission, Role } from "node-appwrite";
 
 const DATABASE_ID = process.env.APPWRITE_DATABASE_ID;
 const DOCTOR_USER_ID = process.env.DOCTOR_USER_ID;
