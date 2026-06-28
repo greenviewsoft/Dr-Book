@@ -72,7 +72,7 @@ export default async function ({ req, res, log, error }) {
   // --- Parse + validate input ---
   let p;
   try {
-    p = JSON.parse(req.body || "{}");
+  p = typeof req.body === "object" ? req.body : JSON.parse(req.bodyRaw || req.body || "{}");
   } catch {
     return res.json({ ok: false, error: "INVALID_INPUT" }, 400);
   }
