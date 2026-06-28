@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Loader2, CalendarPlus } from "lucide-react";
+import {
+  Loader2,
+  CalendarPlus,
+  User,
+  Phone,
+  Hash,
+  ClipboardList,
+} from "lucide-react";
 import { useI18n } from "@/i18n/I18nContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,14 +64,18 @@ export function BookingForm({ onBook, submitting, disabled }) {
     <form onSubmit={handleSubmit} className="grid gap-4">
       <div className="grid gap-2">
         <Label htmlFor="name">{t("booking.name")}</Label>
-        <Input
-          id="name"
-          value={values.name}
-          onChange={update("name")}
-          placeholder={t("booking.namePh")}
-          aria-invalid={!!errors.name}
-          disabled={disabled}
-        />
+        <div className="relative">
+          <User className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="name"
+            className="pl-9"
+            value={values.name}
+            onChange={update("name")}
+            placeholder={t("booking.namePh")}
+            aria-invalid={!!errors.name}
+            disabled={disabled}
+          />
+        </div>
         {errors.name && (
           <p className="text-destructive text-xs">{t(errors.name)}</p>
         )}
@@ -72,15 +83,19 @@ export function BookingForm({ onBook, submitting, disabled }) {
 
       <div className="grid gap-2">
         <Label htmlFor="phone">{t("booking.phone")}</Label>
-        <Input
-          id="phone"
-          inputMode="numeric"
-          value={values.phone}
-          onChange={update("phone")}
-          placeholder={t("booking.phonePh")}
-          aria-invalid={!!errors.phone}
-          disabled={disabled}
-        />
+        <div className="relative">
+          <Phone className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="phone"
+            className="pl-9"
+            inputMode="numeric"
+            value={values.phone}
+            onChange={update("phone")}
+            placeholder={t("booking.phonePh")}
+            aria-invalid={!!errors.phone}
+            disabled={disabled}
+          />
+        </div>
         {errors.phone && (
           <p className="text-destructive text-xs">{t(errors.phone)}</p>
         )}
@@ -88,17 +103,21 @@ export function BookingForm({ onBook, submitting, disabled }) {
 
       <div className="grid gap-2">
         <Label htmlFor="age">{t("booking.age")}</Label>
-        <Input
-          id="age"
-          type="number"
-          min={0}
-          max={150}
-          value={values.age}
-          onChange={update("age")}
-          placeholder={t("booking.agePh")}
-          aria-invalid={!!errors.age}
-          disabled={disabled}
-        />
+        <div className="relative">
+          <Hash className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="age"
+            className="pl-9"
+            type="number"
+            min={0}
+            max={150}
+            value={values.age}
+            onChange={update("age")}
+            placeholder={t("booking.agePh")}
+            aria-invalid={!!errors.age}
+            disabled={disabled}
+          />
+        </div>
         {errors.age && (
           <p className="text-destructive text-xs">{t(errors.age)}</p>
         )}
@@ -111,21 +130,25 @@ export function BookingForm({ onBook, submitting, disabled }) {
             ({t("common.optional")})
           </span>
         </Label>
-        <Textarea
-          id="problem"
-          value={values.problem}
-          onChange={update("problem")}
-          placeholder={t("booking.problemPh")}
-          rows={3}
-          disabled={disabled}
-        />
+        <div className="relative">
+          <ClipboardList className="pointer-events-none absolute top-3 left-3 size-4 text-muted-foreground" />
+          <Textarea
+            id="problem"
+            className="pl-9"
+            value={values.problem}
+            onChange={update("problem")}
+            placeholder={t("booking.problemPh")}
+            rows={3}
+            disabled={disabled}
+          />
+        </div>
       </div>
 
       <Button
         type="submit"
         size="lg"
         disabled={disabled || submitting}
-        className="w-full"
+        className="w-full shadow-sm"
       >
         {submitting ? (
           <Loader2 className="size-4 animate-spin" />

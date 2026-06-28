@@ -5,6 +5,12 @@ import {
   CalendarOff,
   CheckCircle2,
   CalendarX2,
+  Calendar,
+  HeartPulse,
+  ShieldCheck,
+  Zap,
+  Phone,
+  User,
 } from "lucide-react";
 import { useI18n } from "@/i18n/I18nContext";
 import { LanguageToggle } from "@/components/layout/LanguageToggle";
@@ -130,60 +136,100 @@ export function BookingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="border-b bg-background">
-        <div className="mx-auto flex h-14 max-w-2xl items-center gap-2 px-4">
-          <Stethoscope className="size-5 text-primary" />
-          <span className="font-semibold">{config?.chamber_name || t("app.name")}</span>
+    <div className="bg-muted/30 min-h-screen">
+      {/* Header */}
+      <header className="bg-background/80 sticky top-0 z-20 border-b backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-2xl items-center gap-3 px-4">
+          <div className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-xl shadow-sm">
+            <Stethoscope className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm leading-tight font-semibold">
+              {config?.chamber_name || t("app.name")}
+            </p>
+            <p className="text-muted-foreground truncate text-xs leading-tight">
+              {config?.specialty || t("app.tagline")}
+            </p>
+          </div>
           <div className="ml-auto">
             <LanguageToggle />
           </div>
         </div>
       </header>
 
+      {/* Hero */}
+      <section className="bg-hero-medical relative overflow-hidden text-white">
+        <div className="pointer-events-none absolute -top-16 -right-10 size-48 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-12 size-48 rounded-full bg-white/10 blur-2xl" />
+        <div className="relative mx-auto max-w-2xl px-4 py-10 sm:py-14">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur">
+            <HeartPulse className="size-3.5" />
+            {t("app.tagline")}
+          </div>
+          <h1 className="text-balance mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+            {t("booking.title")}
+          </h1>
+          <p className="mt-2 max-w-xl text-sm text-white/85 sm:text-base">
+            {t("booking.subtitle")}
+          </p>
+          {config?.name && (
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium backdrop-blur">
+              <User className="size-4" />
+              {config.name}
+              {config.specialty ? (
+                <span className="text-white/80">· {config.specialty}</span>
+              ) : null}
+            </div>
+          )}
+          <div className="mt-6 flex flex-wrap gap-2.5">
+            <TrustBadge icon={Zap} label={t("booking.heroBadgeInstant")} />
+            <TrustBadge icon={Clock} label={t("booking.heroBadgeNoWait")} />
+            <TrustBadge icon={ShieldCheck} label={t("booking.heroBadgeConfirmed")} />
+          </div>
+        </div>
+      </section>
+
+      {/* Main */}
       <main className="mx-auto max-w-2xl px-4 py-8">
         {loadingConfig ? (
           <LoadingCard label={t("common.loading")} />
         ) : configMissing ? (
-          <Card>
-            <CardContent className="text-center text-muted-foreground">
-              <CalendarX2 className="mx-auto mb-2 size-8" />
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="text-muted-foreground text-center">
+              <CalendarX2 className="text-primary mx-auto mb-2 size-8" />
               {t("errors.configMissing")}
             </CardContent>
           </Card>
         ) : status === "success" && result ? (
           <SuccessCard result={result} onAnother={resetForAnother} />
         ) : (
-          <div className="grid gap-6">
-            <div className="text-center">
-              <h1 className="text-2xl font-semibold tracking-tight">
-                {t("booking.title")}
-              </h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                {t("booking.subtitle")}
-              </p>
-              {config?.name && (
-                <p className="mt-1 text-sm font-medium">
-                  {config.name}
-                  {config.specialty ? ` · ${config.specialty}` : ""}
-                </p>
-              )}
-            </div>
-
-            <Card>
+          <div className="animate-fade-in-up grid gap-6">
+            {/* Step 1: date */}
+            <Card className="border-border/60 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-base">{t("booking.stepDate")}</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <span className="bg-primary/10 text-primary flex size-6 items-center justify-center rounded-full text-xs font-semibold">
+                    1
+                  </span>
+                  {t("booking.stepDate")}
+                </CardTitle>
               </CardHeader>
               <CardContent className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="date">{t("booking.dateLabel")}</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={date}
-                    min={todayISO()}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
+                  <Label htmlFor="date" className="sr-only">
+                    {t("booking.dateLabel")}
+                  </Label>
+                  <div className="relative">
+                    <Calendar className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="date"
+                      type="date"
+                      className="pl-9"
+                      value={date}
+                      min={todayISO()}
+                      onChange={(e) => setDate(e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <DateStatus
@@ -198,9 +244,12 @@ export function BookingPage() {
             </Card>
 
             {canBook && (
-              <Card>
+              <Card className="border-border/60 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-base">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <span className="bg-primary/10 text-primary flex size-6 items-center justify-center rounded-full text-xs font-semibold">
+                      2
+                    </span>
                     {t("booking.stepDetails")}
                   </CardTitle>
                   <CardDescription>
@@ -232,6 +281,47 @@ export function BookingPage() {
           </div>
         )}
       </main>
+
+      {/* Info strip */}
+      {config && !configMissing && (
+        <section className="mx-auto max-w-2xl px-4 pb-12">
+          <div className="flex flex-wrap gap-3">
+            <InfoTile icon={Clock} title={t("booking.workingHours")}>
+              {formatTime(config.daily_start, lang)} –{" "}
+              {formatTime(config.daily_end, lang)}
+            </InfoTile>
+            {config.phone && (
+              <InfoTile icon={Phone} title={t("booking.contact")}>
+                {config.phone}
+              </InfoTile>
+            )}
+            <div className="border-border/60 bg-card min-w-[220px] flex-1 rounded-xl border p-4">
+              <div className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
+                <Calendar className="size-4" /> {t("booking.workingDaysLabel")}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {(config.working_days || []).map((d) => (
+                  <span
+                    key={d}
+                    className="bg-primary/10 text-primary rounded-md px-2 py-0.5 text-xs font-medium"
+                  >
+                    {t(`days.${d}`)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function TrustBadge({ icon: Icon, label }) {
+  return (
+    <div className="inline-flex items-center gap-2 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur sm:text-sm">
+      <Icon className="size-4" />
+      {label}
     </div>
   );
 }
@@ -248,8 +338,8 @@ function DateStatus({
 
   if (loading) {
     return (
-      <div className="text-muted-foreground flex items-center gap-2 text-sm">
-        <Clock className="size-4" /> {t("common.loading")}
+      <div className="text-muted-foreground bg-muted/50 flex items-center gap-2 rounded-xl p-3 text-sm">
+        <Clock className="size-4 animate-pulse" /> {t("common.loading")}
       </div>
     );
   }
@@ -268,9 +358,9 @@ function DateStatus({
   }
 
   return (
-    <div className="bg-muted/50 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg p-3 text-sm">
+    <div className="border-primary/15 bg-primary/5 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border p-3 text-sm">
       <span className="flex items-center gap-2">
-        <Clock className="size-4 text-muted-foreground" />
+        <Clock className="text-primary size-4" />
         {t("booking.workingHours")}:{" "}
         <span className="font-medium">
           {formatTime(config?.daily_start, lang)} –{" "}
@@ -286,8 +376,8 @@ function DateStatus({
 
 function ClosedNote({ icon: Icon, text }) {
   return (
-    <div className="text-destructive flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm">
-      <Icon className="size-4" />
+    <div className="text-destructive bg-destructive/10 flex items-center gap-2 rounded-xl p-3 text-sm font-medium">
+      <Icon className="size-4 shrink-0" />
       {text}
     </div>
   );
@@ -296,14 +386,16 @@ function ClosedNote({ icon: Icon, text }) {
 function SuccessCard({ result, onAnother }) {
   const { t, lang } = useI18n();
   return (
-    <Card className="text-center">
-      <CardHeader>
-        <CheckCircle2 className="text-success mx-auto size-12" />
-        <CardTitle className="mt-2 text-xl">{t("booking.successTitle")}</CardTitle>
-        <CardDescription>{t("booking.successMsg")}</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4">
-        <div className="bg-muted/50 grid grid-cols-3 gap-2 rounded-lg p-4">
+    <Card className="animate-fade-in-up overflow-hidden text-center">
+      <div className="bg-hero-medical relative px-6 py-8 text-white">
+        <div className="bg-white/15 mx-auto mb-3 flex size-14 items-center justify-center rounded-full backdrop-blur">
+          <CheckCircle2 className="size-8" />
+        </div>
+        <CardTitle className="text-xl">{t("booking.successTitle")}</CardTitle>
+        <p className="mt-1 text-sm text-white/85">{t("booking.successMsg")}</p>
+      </div>
+      <CardContent className="grid gap-4 p-6">
+        <div className="bg-muted/50 grid grid-cols-3 gap-2 rounded-xl p-4">
           <Stat label={t("booking.successSerial")} value={`#${result.serial}`} highlight />
           <Stat
             label={t("booking.successTime")}
@@ -343,11 +435,28 @@ function Stat({ label, value, highlight, small }) {
   );
 }
 
+function InfoTile({ icon: Icon, title, children }) {
+  return (
+    <div className="border-border/60 bg-card min-w-[160px] rounded-xl border p-4">
+      <div className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
+        <Icon className="size-4" /> {title}
+      </div>
+      <div className="mt-1 font-semibold">{children}</div>
+    </div>
+  );
+}
+
 function LoadingCard({ label }) {
   return (
-    <Card>
-      <CardContent className="text-muted-foreground text-center text-sm">
-        {label}
+    <Card className="border-border/60 overflow-hidden shadow-sm">
+      <CardContent className="space-y-3 p-6">
+        <div className="bg-muted h-4 w-1/3 animate-pulse rounded" />
+        <div className="bg-muted h-10 animate-pulse rounded" />
+        <div className="bg-muted h-4 w-1/4 animate-pulse rounded" />
+        <div className="bg-muted h-24 animate-pulse rounded" />
+        <div className="text-muted-foreground pt-1 text-center text-sm">
+          {label}
+        </div>
       </CardContent>
     </Card>
   );

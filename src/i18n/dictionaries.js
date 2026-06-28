@@ -58,6 +58,11 @@ export const dictionaries = {
       successTime: "আনুমানিক সময়",
       successNote: "অনুগ্রহ করে নির্দিষ্ট সময়ের কিছু আগে চেম্বারে উপস্থিত হবেন।",
       another: "আরেকটি বুক করুন",
+      heroBadgeInstant: "তাৎক্ষণিক সিরিয়াল",
+      heroBadgeNoWait: "কম অপেক্ষায়",
+      heroBadgeConfirmed: "নিশ্চিত বুকিং",
+      workingDaysLabel: "কাজের দিন",
+      contact: "যোগাযোগ",
     },
     errors: {
       required: "এই ঘরটি আবশ্যক",
@@ -210,6 +215,11 @@ export const dictionaries = {
       successTime: "Estimated time",
       successNote: "Please arrive at the chamber a little before your time.",
       another: "Book another",
+      heroBadgeInstant: "Instant serial",
+      heroBadgeNoWait: "Less waiting",
+      heroBadgeConfirmed: "Confirmed booking",
+      workingDaysLabel: "Working days",
+      contact: "Contact",
     },
     errors: {
       required: "This field is required",
