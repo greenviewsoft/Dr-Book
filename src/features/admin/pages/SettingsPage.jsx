@@ -11,11 +11,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { getDoctorConfig, updateDoctorConfig } from "@/features/admin/api";
+import {
+  getDoctorConfig,
+  updateDoctorConfig,
+  createDoctorConfig,
+} from "@/features/admin/api";
+import { useAuth } from "@/features/admin/hooks/useAuth";
 import { WEEKDAYS } from "@/lib/constants";
+
+// Defaults used when no doctor settings row exists yet, so the doctor can
+// create the first one from this page instead of seeding it in the console.
+const DEFAULT_FORM = {
+  name: "",
+  specialty: "",
+  chamber_name: "",
+  phone: "",
+  daily_limit: 30,
+  daily_start: "10:00",
+  daily_end: "13:00",
+  slot_duration_minutes: 10,
+  working_days: ["sat", "sun", "mon", "tue", "wed"],
+};
+
+function configToForm(cfg) {
+  return {
+    name: cfg.name || "",
+    specialty: cfg.specialty || "",
+    chamber_name: cfg.chamber_name || "",
+    phone: cfg.phone || "",
+    daily_limit: cfg.daily_limit ?? 30,
+    daily_start: cfg.daily_start || "10:00",
+    daily_end: cfg.daily_end || "13:00",
+    slot_duration_minutes: cfg.slot_duration_minutes ?? 10,
+    working_days: cfg.working_days || ["sat", "sun", "mon", "tue", "wed"],
+  };
+}
 
 export function SettingsPage() {
   const { t } = useI18n();
+  const { user } = useAuth();
   const [rowId, setRowId] = useState(null);
   const [form, setForm] = useState(null);
   const [missing, setMissing] = useState(false);
@@ -27,21 +61,13 @@ export function SettingsPage() {
     (async () => {
       try {
         const cfg = await getDoctorConfig();
-        if (!cfg) {
-          setMissing(true);
-        } else {
+        if (cfg) {
           setRowId(cfg.$id);
-          setForm({
-            name: cfg.name || "",
-            specialty: cfg.specialty || "",
-            chamber_name: cfg.chamber_name || "",
-            phone: cfg.phone || "",
-            daily_limit: cfg.daily_limit ?? 30,
-            daily_start: cfg.daily_start || "10:00",
-            daily_end: cfg.daily_end || "13:00",
-            slot_duration_minutes: cfg.slot_duration_minutes ?? 10,
-            working_days: cfg.working_days || ["sat", "sun", "mon", "tue", "wed"],
-          });
+          setForm(configToForm(cfg));
+        } else {
+          // No settings yet — show the form so the doctor can create them.
+          setRowId(null);
+          setForm({ ...DEFAULT_FORM });
         }
       } catch {
         setMissing(true);
@@ -78,10 +104,17 @@ export function SettingsPage() {
   const handleSave = async (e) => {
     e.preventDefault();
     if (saving || !form) return;
+    // Creating the first row needs the doctor's $id to scope edit permissions.
+    if (!rowId && !user?.$id) return;
     setSaving(true);
     setSaved(false);
     try {
-      await updateDoctorConfig(rowId, form);
+      if (rowId) {
+        await updateDoctorConfig(rowId, form);
+      } else {
+        const created = await createDoctorConfig(form, user.$id);
+        setRowId(created.$id); // further saves update instead of duplicating
+      }
       setSaved(true);
     } catch {
       setSaved(false);

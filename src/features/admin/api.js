@@ -44,6 +44,23 @@ export async function updateDoctorConfig(rowId, data) {
   });
 }
 
+// First-time setup: create the single doctor settings row.
+// Read = anyone (the public booking page reads it without login);
+// Update/Delete = the logged-in doctor only. Mirrors addHoliday().
+export async function createDoctorConfig(data, doctorId) {
+  return db.createRow({
+    databaseId: DB_ID,
+    tableId: TABLES.doctors,
+    rowId: ID.unique(),
+    data,
+    permissions: [
+      Permission.read(Role.any()),
+      Permission.update(Role.user(doctorId)),
+      Permission.delete(Role.user(doctorId)),
+    ],
+  });
+}
+
 // ---- Holidays ----
 export async function listHolidays() {
   const { rows } = await db.listRows({
