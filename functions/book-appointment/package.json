@@ -1,0 +1,10 @@
+{
+  "name": "book-appointment",
+  "version": "1.0.0",
+  "description": "Secure public booking endpoint for the chamber appointment system.",
+  "type": "module",
+  "main": "src/main.js",
+  "dependencies": {
+    "appwrite": "^21.5.0"
+  }
+}

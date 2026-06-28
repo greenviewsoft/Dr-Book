@@ -1,0 +1,354 @@
+import { useEffect, useState, useCallback } from "react";
+import {
+  Stethoscope,
+  Clock,
+  CalendarOff,
+  CheckCircle2,
+  CalendarX2,
+} from "lucide-react";
+import { useI18n } from "@/i18n/I18nContext";
+import { LanguageToggle } from "@/components/layout/LanguageToggle";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { BookingForm } from "@/features/booking/components/BookingForm";
+import { getDoctorConfig, getHolidays, getCounter, bookAppointment } from "@/features/booking/api";
+import { todayISO, weekdayKey, computeDisplayTime, formatTime, formatLongDate } from "@/lib/datetime";
+
+const ERROR_KEYS = {
+  NOT_WORKING_DAY: "errors.notWorkingDay",
+  HOLIDAY: "errors.holiday",
+  PAST_DATE: "errors.pastDate",
+  NO_SLOTS: "errors.noSlots",
+  DUPLICATE: "errors.duplicate",
+  INVALID_INPUT: "errors.generic",
+  CONFIG_MISSING: "errors.configMissing",
+  FAILED: "errors.generic",
+};
+
+export function BookingPage() {
+  const { t, lang } = useI18n();
+  const [config, setConfig] = useState(null);
+  const [holidays, setHolidays] = useState([]);
+  const [loadingConfig, setLoadingConfig] = useState(true);
+  const [configMissing, setConfigMissing] = useState(false);
+
+  const [date, setDate] = useState(todayISO());
+  const [counter, setCounter] = useState(null);
+  const [loadingCounter, setLoadingCounter] = useState(false);
+
+  const [status, setStatus] = useState("idle"); // idle | submitting | success
+  const [result, setResult] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
+
+  // Load doctor config + holidays once
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setLoadingConfig(true);
+      try {
+        const [cfg, hol] = await Promise.all([getDoctorConfig(), getHolidays()]);
+        if (!alive) return;
+        setConfig(cfg);
+        setHolidays(hol);
+        setConfigMissing(!cfg);
+      } catch {
+        if (alive) setConfigMissing(true);
+      } finally {
+        if (alive) setLoadingConfig(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Load counter (availability) for the selected date
+  const refreshCounter = useCallback(async (d) => {
+    if (!d) return;
+    setLoadingCounter(true);
+    try {
+      setCounter(await getCounter(d));
+    } catch {
+      setCounter(null);
+    } finally {
+      setLoadingCounter(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshCounter(date);
+  }, [date, refreshCounter]);
+
+  // Availability for the selected date.
+  // The counter column `next_serial` stores the number of serials already
+  // issued for this date (0 when the row doesn't exist yet). The Function
+  // bumps it atomically with incrementRowColumn(max = daily_limit).
+  const weekday = date ? weekdayKey(date) : null;
+  const isWorking = !!config?.working_days?.includes(weekday);
+  const isHoliday = holidays.some((h) => h.date === date);
+  const isPast = date < todayISO();
+  const issued = counter?.next_serial ?? 0;
+  const available = config
+    ? Math.max(0, (config.daily_limit || 0) - issued)
+    : 0;
+  const nextSerial = issued + 1; // the serial the next patient will receive
+  const canBook = !!config && isWorking && !isHoliday && !isPast && available > 0;
+  const nextTime = config
+    ? computeDisplayTime(config.daily_start, nextSerial, config.slot_duration_minutes)
+    : "";
+
+  const handleBook = async (payload) => {
+    setSubmitError(null);
+    setStatus("submitting");
+    try {
+      const res = await bookAppointment({ ...payload, date });
+      setResult(res);
+      setStatus("success");
+      // availability changed — refresh counter
+      refreshCounter(date);
+    } catch (err) {
+      const code = err?.code || "FAILED";
+      setSubmitError(code);
+      setStatus("idle");
+      if (code === "NO_SLOTS" || code === "DUPLICATE") refreshCounter(date);
+    }
+  };
+
+  const resetForAnother = () => {
+    setResult(null);
+    setStatus("idle");
+    setSubmitError(null);
+  };
+
+  return (
+    <div className="min-h-screen bg-muted/30">
+      <header className="border-b bg-background">
+        <div className="mx-auto flex h-14 max-w-2xl items-center gap-2 px-4">
+          <Stethoscope className="size-5 text-primary" />
+          <span className="font-semibold">{config?.chamber_name || t("app.name")}</span>
+          <div className="ml-auto">
+            <LanguageToggle />
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-2xl px-4 py-8">
+        {loadingConfig ? (
+          <LoadingCard label={t("common.loading")} />
+        ) : configMissing ? (
+          <Card>
+            <CardContent className="text-center text-muted-foreground">
+              <CalendarX2 className="mx-auto mb-2 size-8" />
+              {t("errors.configMissing")}
+            </CardContent>
+          </Card>
+        ) : status === "success" && result ? (
+          <SuccessCard result={result} onAnother={resetForAnother} />
+        ) : (
+          <div className="grid gap-6">
+            <div className="text-center">
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {t("booking.title")}
+              </h1>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {t("booking.subtitle")}
+              </p>
+              {config?.name && (
+                <p className="mt-1 text-sm font-medium">
+                  {config.name}
+                  {config.specialty ? ` · ${config.specialty}` : ""}
+                </p>
+              )}
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{t("booking.stepDate")}</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="date">{t("booking.dateLabel")}</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={date}
+                    min={todayISO()}
+                    onChange={(e) => setDate(e.target.value)}
+                  />
+                </div>
+
+                <DateStatus
+                  isWorking={isWorking}
+                  isHoliday={isHoliday}
+                  isPast={isPast}
+                  available={available}
+                  loading={loadingCounter}
+                  config={config}
+                />
+              </CardContent>
+            </Card>
+
+            {canBook && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    {t("booking.stepDetails")}
+                  </CardTitle>
+                  <CardDescription>
+                    {t("booking.nextSerial")}:{" "}
+                    <Badge variant="secondary" className="ml-1">
+                      {nextSerial}
+                    </Badge>
+                    {nextTime && (
+                      <span className="text-muted-foreground">
+                        {" "}
+                        · {t("booking.estTime")}: {formatTime(nextTime, lang)}
+                      </span>
+                    )}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <BookingForm
+                    onBook={handleBook}
+                    submitting={status === "submitting"}
+                  />
+                  {submitError && (
+                    <p className="text-destructive mt-3 text-center text-sm">
+                      {t(ERROR_KEYS[submitError] || "errors.generic")}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+function DateStatus({
+  isWorking,
+  isHoliday,
+  isPast,
+  available,
+  loading,
+  config,
+}) {
+  const { t, lang } = useI18n();
+
+  if (loading) {
+    return (
+      <div className="text-muted-foreground flex items-center gap-2 text-sm">
+        <Clock className="size-4" /> {t("common.loading")}
+      </div>
+    );
+  }
+
+  if (isPast) {
+    return <ClosedNote icon={CalendarOff} text={t("errors.pastDate")} />;
+  }
+  if (isHoliday) {
+    return <ClosedNote icon={CalendarOff} text={t("booking.chamberClosed")} />;
+  }
+  if (!isWorking) {
+    return <ClosedNote icon={CalendarOff} text={t("booking.chamberClosed")} />;
+  }
+  if (available === 0) {
+    return <ClosedNote icon={CalendarX2} text={t("booking.noSlots")} />;
+  }
+
+  return (
+    <div className="bg-muted/50 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg p-3 text-sm">
+      <span className="flex items-center gap-2">
+        <Clock className="size-4 text-muted-foreground" />
+        {t("booking.workingHours")}:{" "}
+        <span className="font-medium">
+          {formatTime(config?.daily_start, lang)} –{" "}
+          {formatTime(config?.daily_end, lang)}
+        </span>
+      </span>
+      <Badge variant="success">
+        {t("booking.slotsAvailable", { count: available })}
+      </Badge>
+    </div>
+  );
+}
+
+function ClosedNote({ icon: Icon, text }) {
+  return (
+    <div className="text-destructive flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm">
+      <Icon className="size-4" />
+      {text}
+    </div>
+  );
+}
+
+function SuccessCard({ result, onAnother }) {
+  const { t, lang } = useI18n();
+  return (
+    <Card className="text-center">
+      <CardHeader>
+        <CheckCircle2 className="text-success mx-auto size-12" />
+        <CardTitle className="mt-2 text-xl">{t("booking.successTitle")}</CardTitle>
+        <CardDescription>{t("booking.successMsg")}</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <div className="bg-muted/50 grid grid-cols-3 gap-2 rounded-lg p-4">
+          <Stat label={t("booking.successSerial")} value={`#${result.serial}`} highlight />
+          <Stat
+            label={t("booking.successTime")}
+            value={result.displayTime ? formatTime(result.displayTime, lang) : "—"}
+          />
+          <Stat
+            label={t("booking.successDate")}
+            value={formatLongDate(result.date, lang)}
+            small
+          />
+        </div>
+        <p className="text-muted-foreground text-sm">{t("booking.successNote")}</p>
+        <Button onClick={onAnother} variant="outline" className="mx-auto">
+          {t("booking.another")}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Stat({ label, value, highlight, small }) {
+  return (
+    <div className="grid gap-1">
+      <span className="text-muted-foreground text-xs">{label}</span>
+      <span
+        className={
+          highlight
+            ? "text-primary text-2xl font-bold"
+            : small
+            ? "text-sm font-medium"
+            : "text-lg font-semibold"
+        }
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function LoadingCard({ label }) {
+  return (
+    <Card>
+      <CardContent className="text-muted-foreground text-center text-sm">
+        {label}
+      </CardContent>
+    </Card>
+  );
+}
