@@ -1,21 +1,3 @@
-// book-appointment — Appwrite Function (Node).
-//
-// This is the SECURITY BOUNDARY for public booking. Patients are anonymous,
-// so the row must be created server-side (with a server API key) and
-// permissioned to the doctor only. Client-side validation is UX only.
-//
-// Required Function environment variables (set in the Appwrite console):
-//   APPWRITE_ENDPOINT    e.g. https://nyc.cloud.appwrite.io/v1
-//   APPWRITE_PROJECT_ID  your project id
-//   APPWRITE_API_KEY     a server API key with TablesDB read/write scopes
-//   APPWRITE_DATABASE_ID the database holding the tables below
-//   DOCTOR_USER_ID       the doctor's Appwrite account $id (permission anchor)
-//
-// Tables (TablesDB): doctors, holidays, appointments, daily_counters
-// daily_counters.next_serial stores the number of serials already issued for
-// that date (0-based). incrementRowColumn(max = daily_limit) both assigns the
-// serial atomically and enforces the daily cap.
-
 import { Client, TablesDB, Query, ID, Permission, Role } from "node-appwrite";
 
 const DATABASE_ID = process.env.APPWRITE_DATABASE_ID;
@@ -72,7 +54,10 @@ export default async function ({ req, res, log, error }) {
   // --- Parse + validate input ---
   let p;
   try {
-  p = typeof req.body === "object" ? req.body : JSON.parse(req.bodyRaw || req.body || "{}");
+    p =
+      typeof req.body === "object"
+        ? req.body
+        : JSON.parse(req.bodyRaw || req.body || "{}");
   } catch {
     return res.json({ ok: false, error: "INVALID_INPUT" }, 400);
   }
@@ -149,7 +134,7 @@ export default async function ({ req, res, log, error }) {
       displayTime: computeDisplayTime(
         cfg.daily_start,
         existing.serial_number,
-        slot
+        slot,
       ),
     });
   }
