@@ -80,6 +80,56 @@ export const dictionaries = {
       generic: "কিছু সমস্যা হয়েছে, আবার চেষ্টা করুন",
       configMissing: "ডাক্তারের সেটিংস এখনো কনফিগার করা হয়নি",
     },
+    home: {
+      nav: {
+        about: "পরিচিতি",
+        expertise: "বিশেষত্ব",
+        contact: "যোগাযোগ",
+        book: "সিরিয়াল নিন",
+        learnMore: "বিস্তারিত",
+      },
+      hero: {
+        cta: "সিরিয়াল নিন",
+        slide1: {
+          title: "অনলাইনে সিরিয়াল নিন",
+          desc: "বাড়ি থেকেই সহজে অ্যাপয়েন্টমেন্ট বুক করুন, অপেক্ষার সময় নষ্ট নয়।",
+        },
+        slide2: {
+          title: "অভিজ্ঞ চিকিৎসক",
+          desc: "বিশ্বস্ত ও যত্নশীল চিকিৎসা সেবা আপনার কাছে।",
+        },
+        slide3: {
+          title: "তাৎক্ষণিক নিশ্চিতকরণ",
+          desc: "বুকিং করামাত্রই সিরিয়াল ও আনুমানিক সময় পেয়ে যান।",
+        },
+      },
+      about: {
+        title: "চিকিৎসক সম্পর্কে",
+        body: "আমরা আধুনিক সুযোগ-সুবিধার সাথে যত্নশীল ও বিশ্বস্ত স্বাস্থ্যসেবা নিশ্চিত করি। রোগীর সুবিধাকে সবচেয়ে বেশি গুরুত্ব দিয়ে দ্রুত ও নির্ভুল চিকিৎসা পরিষেবা দিয়ে থাকি।",
+        stat1: { value: "১০+", label: "বছরের অভিজ্ঞতা" },
+        stat2: { value: "৫০০০+", label: "সন্তুষ্ট রোগী" },
+        stat3: { value: "৪.৯", label: "গড় রেটিং" },
+      },
+      expertise: {
+        title: "আমাদের সেবাসমূহ",
+        subtitle: "যেসব সেবা আমরা প্রদান করি",
+        i1: { title: "সাধারণ পরামর্শ", desc: "সম্পূর্ণ স্বাস্থ্য পরীক্ষা ও পরামর্শ।" },
+        i2: { title: "হৃদরোগ সেবা", desc: "হৃদযন্ত্র ও রক্তচাপ সম্পর্কিত পরামর্শ।" },
+        i3: { title: "রোগ নির্ণয়", desc: "আধুনিক পরীক্ষায় নিখুঁত রোগ নির্ণয়।" },
+        i4: { title: "ল্যাব পরীক্ষা", desc: "দ্রুত ও নির্ভুল ল্যাব রিপোর্ট।" },
+        i5: { title: "চিকিৎসা রিপোর্ট", desc: "বিস্তারিত রিপোর্ট ও ফলোআপ।" },
+        i6: { title: "প্রতিরোধমূলক সেবা", desc: "সুস্থ থাকার প্রতিরোধমূলক পরামর্শ।" },
+      },
+      book: {
+        title: "আপনার সিরিয়াল বুক করুন",
+        subtitle: "তারিখ বেছে তথ্য দিন, সিরিয়াল পেয়ে যান",
+      },
+      footer: {
+        tagline: "আপনার স্বাস্থ্য, আমাদের অগ্রাধিকার।",
+        contactTitle: "যোগাযোগ",
+        rights: "সর্বস্বত্ব সংরক্ষিত।",
+      },
+    },
     admin: {
       viewSite: "ওয়েবসাইট দেখুন",
       login: {
@@ -236,6 +286,56 @@ export const dictionaries = {
       duplicate: "A serial was already taken with this number",
       generic: "Something went wrong, please try again",
       configMissing: "Doctor settings are not configured yet",
+    },
+    home: {
+      nav: {
+        about: "About",
+        expertise: "Expertise",
+        contact: "Contact",
+        book: "Book Serial",
+        learnMore: "Learn more",
+      },
+      hero: {
+        cta: "Book Serial",
+        slide1: {
+          title: "Book Your Serial Online",
+          desc: "Reserve your appointment from home — no waiting in line.",
+        },
+        slide2: {
+          title: "Experienced Specialist",
+          desc: "Trusted, compassionate care you can rely on.",
+        },
+        slide3: {
+          title: "Instant Confirmation",
+          desc: "Get your serial and estimated time the moment you book.",
+        },
+      },
+      about: {
+        title: "About the Doctor",
+        body: "We provide compassionate, trusted healthcare with modern facilities. Patient convenience comes first — delivering fast, accurate care every visit.",
+        stat1: { value: "10+", label: "Years experience" },
+        stat2: { value: "5000+", label: "Happy patients" },
+        stat3: { value: "4.9", label: "Average rating" },
+      },
+      expertise: {
+        title: "Our Services",
+        subtitle: "What we offer",
+        i1: { title: "General Consultation", desc: "Complete health check-ups and advice." },
+        i2: { title: "Cardiac Care", desc: "Heart and blood-pressure consultation." },
+        i3: { title: "Diagnosis", desc: "Accurate diagnosis with modern testing." },
+        i4: { title: "Lab Tests", desc: "Fast and reliable lab reports." },
+        i5: { title: "Medical Reports", desc: "Detailed reports and follow-up." },
+        i6: { title: "Preventive Care", desc: "Stay-healthy preventive guidance." },
+      },
+      book: {
+        title: "Book Your Serial",
+        subtitle: "Pick a date, enter your details, get your serial",
+      },
+      footer: {
+        tagline: "Your health, our priority.",
+        contactTitle: "Contact",
+        rights: "All rights reserved.",
+      },
     },
     admin: {
       viewSite: "View site",

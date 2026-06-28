@@ -1,0 +1,56 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Doctor illustration">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#34bfbf"/>
+      <stop offset="1" stop-color="#15788a"/>
+    </linearGradient>
+    <linearGradient id="coat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eef6f6"/>
+    </linearGradient>
+    <clipPath id="circle"><circle cx="200" cy="200" r="196"/></clipPath>
+  </defs>
+
+  <circle cx="200" cy="200" r="196" fill="url(#bg)"/>
+  <circle cx="150" cy="150" r="120" fill="#ffffff" opacity="0.07"/>
+
+  <g clip-path="url(#circle)">
+    <!-- coat / shoulders -->
+    <path d="M64,400 C64,312 116,266 200,266 C284,266 336,312 336,400 Z" fill="url(#coat)"/>
+    <!-- shirt V -->
+    <path d="M200,266 L172,400 L228,400 Z" fill="#15788a"/>
+    <!-- coat lapels -->
+    <path d="M200,266 L168,330 L186,340 L200,300 Z" fill="#ffffff"/>
+    <path d="M200,266 L232,330 L214,340 L200,300 Z" fill="#ffffff"/>
+
+    <!-- neck -->
+    <rect x="184" y="226" width="32" height="52" rx="12" fill="#e7b48b"/>
+    <!-- head -->
+    <circle cx="200" cy="186" r="60" fill="#f3c8a4"/>
+    <!-- ears -->
+    <circle cx="144" cy="190" r="10" fill="#eab38d"/>
+    <circle cx="256" cy="190" r="10" fill="#eab38d"/>
+    <!-- hair -->
+    <path d="M138,178 C136,118 264,118 262,178 C254,150 232,128 200,128 C168,128 146,150 138,178 Z" fill="#41362e"/>
+    <!-- eyes -->
+    <ellipse cx="180" cy="190" rx="4.5" ry="6.5" fill="#3a2e28"/>
+    <ellipse cx="220" cy="190" rx="4.5" ry="6.5" fill="#3a2e28"/>
+    <!-- smile -->
+    <path d="M182,214 Q200,232 218,214" stroke="#3a2e28" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+    <!-- stethoscope -->
+    <path d="M168,282 C158,318 176,342 198,350" stroke="#134f5c" stroke-width="9" stroke-linecap="round" fill="none"/>
+    <path d="M232,282 C242,318 224,342 202,350" stroke="#134f5c" stroke-width="9" stroke-linecap="round" fill="none"/>
+    <circle cx="167" cy="282" r="7" fill="#15788a"/>
+    <circle cx="233" cy="282" r="7" fill="#15788a"/>
+    <circle cx="200" cy="354" r="17" fill="#15788a"/>
+    <circle cx="200" cy="354" r="9" fill="#34bfbf"/>
+
+    <!-- cross badge -->
+    <g transform="translate(108,340)">
+      <rect width="40" height="40" rx="10" fill="#ffffff" opacity="0.95"/>
+      <rect x="16" y="8" width="8" height="24" rx="3" fill="#15788a"/>
+      <rect x="10" y="14" width="20" height="8" rx="3" fill="#15788a"/>
+    </g>
+  </g>
+</svg>
