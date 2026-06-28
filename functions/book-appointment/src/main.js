@@ -1,10 +1,13 @@
 // book-appointment — Appwrite Function (Node).
-// node-appwrite SDK version (server-side).
+// Uses browser appwrite SDK with TablesDB (matches project setup).
 
-import { Client, Databases, Query, ID, Permission, Role } from "node-appwrite";
+import { Client, TablesDB, Query, ID, Permission, Role } from "appwrite";
 
 const DATABASE_ID = process.env.APPWRITE_DATABASE_ID;
 const DOCTOR_USER_ID = process.env.DOCTOR_USER_ID;
+const ENDPOINT = process.env.APPWRITE_ENDPOINT;
+const PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
+const API_KEY = process.env.APPWRITE_API_KEY;
 
 const TABLES = {
   doctors: "doctors",
@@ -16,11 +19,11 @@ const TABLES = {
 const TZ = "Asia/Dhaka";
 
 function makeDb() {
-  const client = new Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT)
-    .setProject(process.env.APPWRITE_PROJECT_ID)
-    .setKey(process.env.APPWRITE_API_KEY);
-  return new Databases(client);
+  const client = new Client();
+  client.setEndpoint(ENDPOINT);
+  client.setProject(PROJECT_ID);
+  client.setKey(API_KEY);
+  return new TablesDB(client);
 }
 
 function todayISO() {
@@ -54,7 +57,14 @@ export default async function ({ req, res, log, error }) {
     return res.json({ ok: false, error: "FAILED" }, 405);
   }
 
-  // --- Parse + validate input ---
+  // --- Log env vars for debugging ---
+  log(`ENDPOINT=${ENDPOINT}`);
+  log(`PROJECT_ID=${PROJECT_ID}`);
+  log(`DATABASE_ID=${DATABASE_ID}`);
+  log(`DOCTOR_USER_ID=${DOCTOR_USER_ID}`);
+  log(`API_KEY starts with: ${API_KEY ? API_KEY.substring(0, 10) : "MISSING"}`);
+
+  // --- Parse input ---
   let p;
   try {
     p = typeof req.body === "object"
@@ -80,7 +90,7 @@ export default async function ({ req, res, log, error }) {
     age > 150 ||
     !/^\d{4}-\d{2}-\d{2}$/.test(date)
   ) {
-    log(`Validation failed: name=${name}, phone=${phone}, age=${age}, date=${date}`);
+    log(`Validation failed`);
     return res.json({ ok: false, error: "INVALID_INPUT" }, 400);
   }
 
@@ -94,10 +104,13 @@ export default async function ({ req, res, log, error }) {
   // --- Doctor settings ---
   let cfg;
   try {
-    const doctorsRes = await db.listDocuments(DATABASE_ID, TABLES.doctors, [
-      Query.limit(1),
-    ]);
-    cfg = doctorsRes.documents[0];
+    const doctorsRes = await db.listRows({
+      databaseId: DATABASE_ID,
+      tableId: TABLES.doctors,
+      queries: [Query.limit(1)],
+    });
+    cfg = doctorsRes.rows[0];
+    log(`Doctor config loaded: ${JSON.stringify(cfg)}`);
   } catch (e) {
     error(`Failed to load doctor config: ${e?.message || e}`);
     return res.json({ ok: false, error: "CONFIG_MISSING" }, 500);
@@ -109,80 +122,85 @@ export default async function ({ req, res, log, error }) {
   const workingDays = cfg.working_days || [];
   const slot = Number(cfg.slot_duration_minutes) || 1;
 
-  log(`Doctor config: limit=${limit}, workingDays=${workingDays}, slot=${slot}`);
-
-  // --- Date rules (Asia/Dhaka) ---
+  // --- Date rules ---
   if (date < todayISO())
     return res.json({ ok: false, error: "PAST_DATE" }, 400);
   if (!workingDays.includes(weekdayKey(date)))
     return res.json({ ok: false, error: "NOT_WORKING_DAY" }, 400);
 
   // --- Holiday check ---
-  const holRes = await db.listDocuments(DATABASE_ID, TABLES.holidays, [
-    Query.equal("date", date),
-    Query.limit(1),
-  ]);
-  if (holRes.documents.length > 0)
+  const holRes = await db.listRows({
+    databaseId: DATABASE_ID,
+    tableId: TABLES.holidays,
+    queries: [Query.equal("date", date), Query.limit(1)],
+  });
+  if (holRes.rows.length > 0)
     return res.json({ ok: false, error: "HOLIDAY" }, 400);
 
-  // --- Spam dedupe (same phone + date, not cancelled) ---
-  const dupRes = await db.listDocuments(DATABASE_ID, TABLES.appointments, [
-    Query.equal("patient_phone", phone),
-    Query.equal("appointment_date", date),
-    Query.notEqual("status", "cancelled"),
-    Query.limit(1),
-  ]);
-  if (dupRes.documents.length > 0) {
-    const existing = dupRes.documents[0];
+  // --- Spam dedupe ---
+  const dupRes = await db.listRows({
+    databaseId: DATABASE_ID,
+    tableId: TABLES.appointments,
+    queries: [
+      Query.equal("patient_phone", phone),
+      Query.equal("appointment_date", date),
+      Query.notEqual("status", "cancelled"),
+      Query.limit(1),
+    ],
+  });
+  if (dupRes.rows.length > 0) {
+    const existing = dupRes.rows[0];
     return res.json({
       ok: true,
       duplicate: true,
       serial: existing.serial_number,
       date,
-      displayTime: computeDisplayTime(
-        cfg.daily_start,
-        existing.serial_number,
-        slot
-      ),
+      displayTime: computeDisplayTime(cfg.daily_start, existing.serial_number, slot),
     });
   }
 
-  // --- Ensure the daily counter document exists ---
-  const counterDocId = "d" + date.replaceAll("-", "");
+  // --- Daily counter ---
+  const counterRowId = "d" + date.replaceAll("-", "");
   try {
-    await db.createDocument(
-      DATABASE_ID,
-      TABLES.daily_counters,
-      counterDocId,
-      { date, next_serial: 0 },
-      [Permission.read(Role.any())]
-    );
+    await db.createRow({
+      databaseId: DATABASE_ID,
+      tableId: TABLES.daily_counters,
+      rowId: counterRowId,
+      data: { date, next_serial: 0 },
+      permissions: [Permission.read(Role.any())],
+    });
   } catch (e) {
     log(`counter exists for ${date}: ${e?.message || e}`);
   }
 
-  // --- Pre-check slot availability ---
   let issued = 0;
   try {
-    const c = await db.getDocument(DATABASE_ID, TABLES.daily_counters, counterDocId);
+    const c = await db.getRow({
+      databaseId: DATABASE_ID,
+      tableId: TABLES.daily_counters,
+      rowId: counterRowId,
+    });
     issued = Number(c.next_serial) || 0;
   } catch {
     /* ignore */
   }
+
   if (issued >= limit) return res.json({ ok: false, error: "NO_SLOTS" }, 400);
 
   // --- Atomic serial increment ---
   let serial;
   try {
-    const updated = await db.updateDocument(
-      DATABASE_ID,
-      TABLES.daily_counters,
-      counterDocId,
-      { next_serial: issued + 1 }
-    );
-    serial = Number(updated.next_serial);
+    const row = await db.incrementRowColumn({
+      databaseId: DATABASE_ID,
+      tableId: TABLES.daily_counters,
+      rowId: counterRowId,
+      column: "next_serial",
+      value: 1,
+      max: limit,
+    });
+    serial = Number(row.next_serial);
   } catch (e) {
-    error(`Failed to increment counter: ${e?.message || e}`);
+    log(`increment capped for ${date}: ${e?.message || e}`);
     return res.json({ ok: false, error: "NO_SLOTS" }, 400);
   }
 
@@ -190,13 +208,13 @@ export default async function ({ req, res, log, error }) {
 
   const displayTime = computeDisplayTime(cfg.daily_start, serial, slot);
 
-  // --- Create the appointment ---
+  // --- Create appointment ---
   try {
-    await db.createDocument(
-      DATABASE_ID,
-      TABLES.appointments,
-      ID.unique(),
-      {
+    await db.createRow({
+      databaseId: DATABASE_ID,
+      tableId: TABLES.appointments,
+      rowId: ID.unique(),
+      data: {
         patient_name: name,
         patient_phone: phone,
         patient_age: age,
@@ -207,12 +225,12 @@ export default async function ({ req, res, log, error }) {
         created_at: new Date().toISOString(),
         doctor_id: DOCTOR_USER_ID,
       },
-      [
+      permissions: [
         Permission.read(Role.user(DOCTOR_USER_ID)),
         Permission.update(Role.user(DOCTOR_USER_ID)),
         Permission.delete(Role.user(DOCTOR_USER_ID)),
-      ]
-    );
+      ],
+    });
   } catch (e) {
     error(`Failed to create appointment: ${e?.message || e}`);
     return res.json({ ok: false, error: "FAILED" }, 500);
