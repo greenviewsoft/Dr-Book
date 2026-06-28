@@ -1,7 +1,7 @@
 // book-appointment — Appwrite Function (Node).
 // Uses browser appwrite SDK with TablesDB (matches project setup).
 
-import { Client, TablesDB, Query, ID, Permission, Role } from "appwrite";
+import { Client, TablesDB, Query, ID, Permission, Role } from "node-appwrite";
 
 const DATABASE_ID = process.env.APPWRITE_DATABASE_ID;
 const DOCTOR_USER_ID = process.env.DOCTOR_USER_ID;
