@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Stethoscope, Menu, XIcon } from "lucide-react";
 import { useI18n } from "@/i18n/I18nContext";
 import { LanguageToggle } from "@/components/layout/LanguageToggle";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -19,9 +20,13 @@ export function SiteNav({ config }) {
     <header className="bg-background/85 sticky top-0 z-40 border-b backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
         <a href="#top" className="flex items-center gap-2.5">
-          <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-xl shadow-sm">
-            <Stethoscope className="size-5" />
-          </span>
+          {config?.logo ? (
+            <img src={config.logo} alt="" className="size-9 rounded-xl object-cover" />
+          ) : (
+            <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-xl shadow-sm">
+              <Stethoscope className="size-5" />
+            </span>
+          )}
           <span className="flex flex-col leading-tight">
             <span className="text-sm font-semibold">
               {config?.chamber_name || t("app.name")}
@@ -46,6 +51,7 @@ export function SiteNav({ config }) {
           </nav>
 
           <LanguageToggle />
+          <ThemeToggle />
 
           <a
             href="#book"

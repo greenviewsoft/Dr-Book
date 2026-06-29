@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { RefreshCw, Inbox } from "lucide-react";
+import { RefreshCw, Inbox, AlertTriangle, Download } from "lucide-react";
 import { useI18n } from "@/i18n/I18nContext";
 import {
   Card,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -20,10 +21,12 @@ import {
 } from "@/components/ui/table";
 import {
   listAppointmentsByDate,
+  listAppointmentsByMonth,
   updateAppointmentStatus,
   getDoctorConfig,
 } from "@/features/admin/api";
 import { todayISO, computeDisplayTime, formatTime } from "@/lib/datetime";
+import { cn } from "@/lib/utils";
 
 const STATUS_VARIANT = {
   pending: "warning",
@@ -32,28 +35,46 @@ const STATUS_VARIANT = {
   cancelled: "destructive",
 };
 
+const MODES = ["today", "day", "month"];
+
 export function DashboardPage() {
   const { t, lang } = useI18n();
+  const [mode, setMode] = useState("today");
+  const [day, setDay] = useState(todayISO());
+  const [month, setMonth] = useState(todayISO().slice(0, 7));
   const [items, setItems] = useState([]);
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
+  const [err, setErr] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setErr(null);
     try {
       const [rows, cfg] = await Promise.all([
-        listAppointmentsByDate(todayISO()),
+        mode === "month"
+          ? listAppointmentsByMonth(month)
+          : listAppointmentsByDate(mode === "today" ? todayISO() : day),
         getDoctorConfig(),
       ]);
-      setItems(rows);
+      // Sort client-side so a missing index can't blank the list.
+      setItems(
+        [...rows].sort((a, b) => {
+          const da = a.appointment_date || "";
+          const dbb = b.appointment_date || "";
+          if (da !== dbb) return da < dbb ? -1 : 1;
+          return (a.serial_number || 0) - (b.serial_number || 0);
+        }),
+      );
       setConfig(cfg);
-    } catch {
+    } catch (e) {
       setItems([]);
+      setErr(e?.message || String(e));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [mode, day, month]);
 
   useEffect(() => {
     load();
@@ -83,24 +104,124 @@ export function DashboardPage() {
 
   const slotMinutes = config?.slot_duration_minutes || 0;
 
+  const title =
+    mode === "month"
+      ? t("admin.report.monthlyTitle")
+      : mode === "day"
+        ? t("admin.report.dailyTitle")
+        : t("admin.nav.dashboard");
+
+  const periodLabel =
+    mode === "month"
+      ? new Intl.DateTimeFormat(lang === "bn" ? "bn-BD" : "en-GB", {
+          month: "long",
+          year: "numeric",
+        }).format(
+          new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1, 1),
+        )
+      : new Intl.DateTimeFormat(lang === "bn" ? "bn-BD" : "en-GB", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }).format(
+          new Date((mode === "today" ? todayISO() : day) + "T00:00:00"),
+        );
+
+  const handleExport = () => {
+    if (!items.length) return;
+    const head = [
+      "Serial",
+      "Name",
+      "Phone",
+      "Age",
+      "Date",
+      "Time",
+      "Status",
+    ];
+    const body = items.map((r) => [
+      r.serial_number,
+      r.patient_name,
+      r.patient_phone,
+      r.patient_age,
+      r.appointment_date,
+      slotMinutes && config?.daily_start
+        ? computeDisplayTime(config.daily_start, r.serial_number, slotMinutes)
+        : "",
+      r.status,
+    ]);
+    const csv = [head, ...body]
+      .map((row) =>
+        row.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","),
+      )
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `appointments-${
+      mode === "month" ? month : mode === "today" ? todayISO() : day
+    }.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="grid gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">{t("admin.nav.dashboard")}</h1>
-          <p className="text-muted-foreground text-sm">
-            {new Intl.DateTimeFormat(lang === "bn" ? "bn-BD" : "en-GB", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            }).format(new Date())}
-          </p>
+          <h1 className="text-xl font-semibold">{title}</h1>
+          <p className="text-muted-foreground text-sm">{periodLabel}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-          <RefreshCw className={loading ? "size-4 animate-spin" : "size-4"} />
-          {loading ? t("common.loading") : t("common.refresh")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            disabled={!items.length}
+          >
+            <Download className="size-4" /> {t("admin.report.exportCsv")}
+          </Button>
+          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+            <RefreshCw className={loading ? "size-4 animate-spin" : "size-4"} />
+            {loading ? t("common.loading") : t("common.refresh")}
+          </Button>
+        </div>
+      </div>
+
+      {/* Mode tabs + pickers */}
+      <div className="flex flex-wrap items-center gap-2">
+        {MODES.map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setMode(m)}
+            className={cn(
+              "cursor-pointer rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+              mode === m
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-background text-muted-foreground hover:bg-accent",
+            )}
+          >
+            {t(`admin.report.${m}`)}
+          </button>
+        ))}
+        {mode === "day" && (
+          <Input
+            type="date"
+            value={day}
+            onChange={(e) => setDay(e.target.value)}
+            className="w-auto"
+          />
+        )}
+        {mode === "month" && (
+          <Input
+            type="month"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className="w-auto"
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -111,9 +232,16 @@ export function DashboardPage() {
         <StatCard label={t("admin.stats.cancelled")} value={stats.cancelled} />
       </div>
 
+      {err && (
+        <div className="text-destructive bg-destructive/10 flex items-start gap-2 rounded-lg p-3 text-sm">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+          <span className="break-words">{err}</span>
+        </div>
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{t("admin.nav.dashboard")}</CardTitle>
+          <CardTitle className="text-base">{title}</CardTitle>
           <CardDescription>{t("admin.table.empty")}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -127,6 +255,11 @@ export function DashboardPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("admin.table.serial")}</TableHead>
+                  {mode === "month" && (
+                    <TableHead className="whitespace-nowrap">
+                      {t("booking.dateLabel")}
+                    </TableHead>
+                  )}
                   <TableHead>{t("admin.table.name")}</TableHead>
                   <TableHead className="hidden sm:table-cell">
                     {t("admin.table.phone")}
@@ -159,6 +292,11 @@ export function DashboardPage() {
                   return (
                     <TableRow key={r.$id}>
                       <TableCell className="font-medium">#{r.serial_number}</TableCell>
+                      {mode === "month" && (
+                        <TableCell className="whitespace-nowrap">
+                          {r.appointment_date}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <div className="font-medium">{r.patient_name}</div>
                         <div className="text-muted-foreground text-xs sm:hidden">

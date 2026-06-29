@@ -1,6 +1,9 @@
 // Appwrite identifiers. Set DB_ID and BOOK_FUNCTION_ID in your .env file.
 export const DB_ID = import.meta.env.VITE_APPWRITE_DB_ID;
 
+// Appwrite Storage bucket for site branding (logo/favicon). Read = Any.
+export const BUCKET_ID = import.meta.env.VITE_APPWRITE_BUCKET_ID;
+
 export const TABLES = {
   doctors: "doctors",
   holidays: "holidays",

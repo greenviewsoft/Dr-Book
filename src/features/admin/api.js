@@ -1,6 +1,6 @@
 import { Query, ID, Permission, Role } from "appwrite";
-import { db } from "@/lib/appwrite";
-import { DB_ID, TABLES } from "@/lib/constants";
+import { db, storage } from "@/lib/appwrite";
+import { DB_ID, TABLES, BUCKET_ID } from "@/lib/constants";
 
 // ---- Appointments ----
 export async function listAppointmentsByDate(date) {
@@ -9,9 +9,19 @@ export async function listAppointmentsByDate(date) {
     tableId: TABLES.appointments,
     queries: [
       Query.equal("appointment_date", date),
-      Query.orderAsc("serial_number"),
       Query.limit(500),
     ],
+  });
+  return rows;
+}
+
+// month = "YYYY-MM". Prefix-matches appointment_date so a range index isn't
+// required (startsWith works on strings without a fulltext index).
+export async function listAppointmentsByMonth(month) {
+  const { rows } = await db.listRows({
+    databaseId: DB_ID,
+    tableId: TABLES.appointments,
+    queries: [Query.startsWith("appointment_date", month), Query.limit(2000)],
   });
   return rows;
 }
@@ -59,6 +69,17 @@ export async function createDoctorConfig(data, doctorId) {
       Permission.delete(Role.user(doctorId)),
     ],
   });
+}
+
+// ---- Site branding (logo/favicon uploads) ----
+// Uploads an image to the public site-media bucket and returns a view URL
+// to store on the doctors row. Bucket must have Read = Any, Create = Users.
+export async function uploadSiteImage(file) {
+  const created = await storage.createFile(BUCKET_ID, ID.unique(), file);
+  return {
+    id: created.$id,
+    url: storage.getFileView(BUCKET_ID, created.$id),
+  };
 }
 
 // ---- Holidays ----

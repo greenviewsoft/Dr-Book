@@ -186,3 +186,23 @@ npm run dev
 - **Function 403/permission error:** API key-এ Tables read/write scope দেওয়া আছে কিনা নিশ্চিত করো।
 - **ড্যাশবোর্ডে কিছু দেখাচ্ছে না:** appointments row-গুলোর permission-এ ডাক্তার ইউজার আছে কিনা নিশ্চিত করো (Function অটোমেটিক সেট করে যদি `DOCTOR_USER_ID` ঠিক থাকে)।
 - **বাংলা সঠিক দেখাচ্ছে না:** ইন্টারনেট কানেকশন দরকার Google Font (Hind Siliguri) লোডের জন্য।
+
+---
+
+## ৯. Branding — logo, favicon, address (optional)
+
+Settings পেজ থেকে logo/favicon আপলোড ও address সেট করতে চাইলে:
+
+1. **Storage bucket তৈরি:** Console → **Storage** → **Create Bucket** → নাম `site_media`।
+   - **Permissions:** Read = **All users**, Create/Update/Delete = **Users**।
+   - **File Security:** **Disabled** (bucket-level permission ব্যবহার হবে)।
+2. **`doctors` টেবিলে attributes যোগ:** `address` (String 200), `logo` (String 500), `favicon` (String 500), `photo` (String 500)।
+3. **`.env`-এ bucket id:**
+   ```
+   VITE_APPWRITE_BUCKET_ID = "<site_media bucket id>"
+   ```
+4. `/admin/settings` → **Branding** অংশে logo/favicon আপলোড ও address দিন → Save।
+   - **Logo:** nav ও footer-এ দেখাবে (না থাকলে ডিফল্ট স্টেথোস্কোপ আইকন)।
+   - **Favicon:** ব্রাউজার ট্যাবে।
+   - **Address:** footer-এর contact কলামে।
+   - **Profile photo:** About ও Hero section-এ দেখাবে (না থাকলে ডিফল্ট illustration)।

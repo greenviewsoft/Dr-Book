@@ -127,11 +127,20 @@ export const dictionaries = {
       footer: {
         tagline: "আপনার স্বাস্থ্য, আমাদের অগ্রাধিকার।",
         contactTitle: "যোগাযোগ",
+        address: "ঠিকানা",
         rights: "সর্বস্বত্ব সংরক্ষিত।",
       },
     },
     admin: {
       viewSite: "ওয়েবসাইট দেখুন",
+      report: {
+        today: "আজ",
+        day: "নির্দিষ্ট দিন",
+        month: "মাস",
+        dailyTitle: "দৈনিক রিপোর্ট",
+        monthlyTitle: "মাসিক রিপোর্ট",
+        exportCsv: "CSV ডাউনলোড",
+      },
       login: {
         title: "ড্যাশবোর্ড লগইন",
         subtitle: "শুধু অনুমোদিত ব্যবহারকারীর জন্য",
@@ -187,6 +196,7 @@ export const dictionaries = {
         specialty: "বিভাগ/বিশেষত্ব",
         chamber: "চেম্বারের নাম",
         phone: "যোগাযোগ নম্বর",
+        profilePhoto: "প্রোফাইল ছবি",
         dailyLimit: "প্রতিদিন রোগী সংখ্যা",
         startTime: "শুরুর সময়",
         endTime: "শেষের সময়",
@@ -194,6 +204,12 @@ export const dictionaries = {
         workingDays: "কর্মদিবস",
         save: "সেটিংস সেভ করুন",
         saved: "সেটিংস সেভ হয়েছে",
+        branding: "ব্র্যান্ডিং ও ঠিকানা",
+        address: "ঠিকানা",
+        logo: "লোগো",
+        favicon: "ফ্যাভিকন",
+        upload: "আপলোড",
+        uploading: "আপলোড হচ্ছে...",
       },
       holidays: {
         title: "ছুটির দিন",
@@ -334,11 +350,20 @@ export const dictionaries = {
       footer: {
         tagline: "Your health, our priority.",
         contactTitle: "Contact",
+        address: "Address",
         rights: "All rights reserved.",
       },
     },
     admin: {
       viewSite: "View site",
+      report: {
+        today: "Today",
+        day: "By day",
+        month: "By month",
+        dailyTitle: "Daily Report",
+        monthlyTitle: "Monthly Report",
+        exportCsv: "Export CSV",
+      },
       login: {
         title: "Dashboard Login",
         subtitle: "Authorized users only",
@@ -394,6 +419,7 @@ export const dictionaries = {
         specialty: "Specialty",
         chamber: "Chamber name",
         phone: "Contact number",
+        profilePhoto: "Profile photo",
         dailyLimit: "Daily patient limit",
         startTime: "Start time",
         endTime: "End time",
@@ -401,6 +427,12 @@ export const dictionaries = {
         workingDays: "Working days",
         save: "Save Settings",
         saved: "Settings saved",
+        branding: "Branding & Address",
+        address: "Address",
+        logo: "Logo",
+        favicon: "Favicon",
+        upload: "Upload",
+        uploading: "Uploading...",
       },
       holidays: {
         title: "Holidays",

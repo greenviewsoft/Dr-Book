@@ -24,6 +24,7 @@ import { Hero } from "@/components/home/Hero";
 import { About } from "@/components/home/About";
 import { Expertise } from "@/components/home/Expertise";
 import { SiteFooter } from "@/components/home/SiteFooter";
+import { Reveal } from "@/components/common/Reveal";
 import { getDoctorConfig, getHolidays, getCounter, bookAppointment } from "@/features/booking/api";
 import { todayISO, weekdayKey, computeDisplayTime, formatTime, formatLongDate } from "@/lib/datetime";
 
@@ -92,6 +93,13 @@ export function BookingPage() {
     refreshCounter(date);
   }, [date, refreshCounter]);
 
+  // Sync the browser tab favicon when the doctor has set one.
+  useEffect(() => {
+    if (!config?.favicon) return;
+    const link = document.querySelector("link[rel='icon']");
+    if (link) link.href = config.favicon;
+  }, [config?.favicon]);
+
   // Availability for the selected date.
   // The counter column `next_serial` stores the number of serials already
   // issued for this date (0 when the row doesn't exist yet). The Function
@@ -143,7 +151,7 @@ export function BookingPage() {
       {/* Booking section */}
       <section id="book" className="scroll-mt-24 bg-background">
         <div className="mx-auto max-w-2xl px-4 py-16">
-          <div className="mb-8 text-center">
+          <Reveal className="mb-8 text-center">
             <p className="text-primary text-sm font-semibold">
               {t("home.nav.book")}
             </p>
@@ -153,7 +161,7 @@ export function BookingPage() {
             <p className="text-muted-foreground mt-2 text-sm">
               {t("home.book.subtitle")}
             </p>
-          </div>
+          </Reveal>
 
           {loadingConfig ? (
             <LoadingCard label={t("common.loading")} />

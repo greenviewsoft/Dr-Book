@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2, Save, Check } from "lucide-react";
+import { Loader2, Save, Check, Upload, Image as ImageIcon } from "lucide-react";
 import { useI18n } from "@/i18n/I18nContext";
 import {
   Card,
@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ import {
   getDoctorConfig,
   updateDoctorConfig,
   createDoctorConfig,
+  uploadSiteImage,
 } from "@/features/admin/api";
 import { useAuth } from "@/features/admin/hooks/useAuth";
 import { WEEKDAYS } from "@/lib/constants";
@@ -26,11 +27,15 @@ const DEFAULT_FORM = {
   specialty: "",
   chamber_name: "",
   phone: "",
+  address: "",
   daily_limit: 30,
   daily_start: "10:00",
   daily_end: "13:00",
   slot_duration_minutes: 10,
   working_days: ["sat", "sun", "mon", "tue", "wed"],
+  logo: "",
+  favicon: "",
+  photo: "",
 };
 
 function configToForm(cfg) {
@@ -39,11 +44,15 @@ function configToForm(cfg) {
     specialty: cfg.specialty || "",
     chamber_name: cfg.chamber_name || "",
     phone: cfg.phone || "",
+    address: cfg.address || "",
     daily_limit: cfg.daily_limit ?? 30,
     daily_start: cfg.daily_start || "10:00",
     daily_end: cfg.daily_end || "13:00",
     slot_duration_minutes: cfg.slot_duration_minutes ?? 10,
     working_days: cfg.working_days || ["sat", "sun", "mon", "tue", "wed"],
+    logo: cfg.logo || "",
+    favicon: cfg.favicon || "",
+    photo: cfg.photo || "",
   };
 }
 
@@ -56,6 +65,7 @@ export function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState({ logo: false, favicon: false, photo: false });
 
   useEffect(() => {
     (async () => {
@@ -99,6 +109,20 @@ export function SettingsPage() {
       };
     });
     setSaved(false);
+  };
+
+  const handleUpload = async (key, file) => {
+    if (!file) return;
+    setUploading((u) => ({ ...u, [key]: true }));
+    setSaved(false);
+    try {
+      const { url } = await uploadSiteImage(file);
+      setForm((f) => ({ ...f, [key]: url }));
+    } catch {
+      /* ignore — preview stays unchanged */
+    } finally {
+      setUploading((u) => ({ ...u, [key]: false }));
+    }
   };
 
   const handleSave = async (e) => {
@@ -167,6 +191,12 @@ export function SettingsPage() {
           <Field label={t("admin.settings.phone")}>
             <Input value={form.phone} onChange={set("phone")} />
           </Field>
+          <ImageField
+            label={t("admin.settings.profilePhoto")}
+            value={form.photo}
+            uploading={uploading.photo}
+            onPick={(f) => handleUpload("photo", f)}
+          />
         </CardContent>
       </Card>
 
@@ -228,6 +258,29 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t("admin.settings.branding")}</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <Field label={t("admin.settings.address")}>
+            <Input value={form.address} onChange={set("address")} />
+          </Field>
+          <ImageField
+            label={t("admin.settings.logo")}
+            value={form.logo}
+            uploading={uploading.logo}
+            onPick={(f) => handleUpload("logo", f)}
+          />
+          <ImageField
+            label={t("admin.settings.favicon")}
+            value={form.favicon}
+            uploading={uploading.favicon}
+            onPick={(f) => handleUpload("favicon", f)}
+          />
+        </CardContent>
+      </Card>
+
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={saving}>
           {saving ? (
@@ -252,6 +305,46 @@ function Field({ label, children }) {
     <div className="grid gap-2">
       <Label>{label}</Label>
       {children}
+    </div>
+  );
+}
+
+function ImageField({ label, value, uploading, onPick }) {
+  const { t } = useI18n();
+  return (
+    <div className="grid gap-2">
+      <Label>{label}</Label>
+      <div className="flex items-center gap-3">
+        <div className="bg-muted flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border">
+          {value ? (
+            <img src={value} alt="" className="size-full object-contain" />
+          ) : (
+            <ImageIcon className="text-muted-foreground size-5" />
+          )}
+        </div>
+        <label
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "cursor-pointer",
+          )}
+        >
+          {uploading ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Upload className="size-4" />
+          )}
+          {uploading ? t("admin.settings.uploading") : t("admin.settings.upload")}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              onPick(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+        </label>
+      </div>
     </div>
   );
 }

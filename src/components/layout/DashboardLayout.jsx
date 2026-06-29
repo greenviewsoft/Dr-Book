@@ -4,6 +4,7 @@ import { useI18n } from "@/i18n/I18nContext";
 import { useAuth } from "@/features/admin/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/layout/LanguageToggle";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -39,6 +40,7 @@ export function DashboardLayout() {
               </a>
             </Button>
             <LanguageToggle />
+            <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="size-4" />
               <span className="hidden sm:inline">{t("admin.nav.logout")}</span>

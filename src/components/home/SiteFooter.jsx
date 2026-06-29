@@ -1,4 +1,4 @@
-import { Stethoscope, Phone, Clock, CalendarDays } from "lucide-react";
+import { Stethoscope, Phone, Clock, CalendarDays, MapPin } from "lucide-react";
 import { useI18n } from "@/i18n/I18nContext";
 import { formatTime } from "@/lib/datetime";
 
@@ -17,9 +17,13 @@ export function SiteFooter({ config }) {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-xl">
-              <Stethoscope className="size-5" />
-            </span>
+            {config?.logo ? (
+              <img src={config.logo} alt="" className="size-9 rounded-lg object-cover" />
+            ) : (
+              <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-xl">
+                <Stethoscope className="size-5" />
+              </span>
+            )}
             <span className="font-semibold">
               {config?.chamber_name || t("app.name")}
             </span>
@@ -48,6 +52,12 @@ export function SiteFooter({ config }) {
         <div>
           <h4 className="text-sm font-semibold">{t("home.footer.contactTitle")}</h4>
           <ul className="text-muted-foreground mt-3 space-y-2 text-sm">
+            {config?.address && (
+              <li className="flex items-start gap-2">
+                <MapPin className="mt-0.5 size-4 shrink-0" />
+                {config.address}
+              </li>
+            )}
             {config?.daily_start && config?.daily_end && (
               <li className="flex items-center gap-2">
                 <Clock className="size-4 shrink-0" />

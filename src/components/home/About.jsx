@@ -1,5 +1,7 @@
 import { Award, Users, Star, ShieldCheck } from "lucide-react";
 import { useI18n } from "@/i18n/I18nContext";
+import { Reveal } from "@/components/common/Reveal";
+import { CountUp } from "@/components/common/CountUp";
 
 const STATS = [
   { key: "stat1", Icon: Award },
@@ -8,12 +10,12 @@ const STATS = [
 ];
 
 export function About({ config }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   return (
     <section id="about" className="scroll-mt-24 bg-background">
       <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 lg:grid-cols-2">
         {/* Doctor visual */}
-        <div className="relative mx-auto w-full max-w-sm lg:order-first">
+        <Reveal className="relative mx-auto w-full max-w-sm lg:order-first">
           <div className="bg-primary/10 absolute inset-0 rotate-3 rounded-[2rem]" />
           <img
             src={config?.photo || "/doctor.svg"}
@@ -28,10 +30,10 @@ export function About({ config }) {
               {t("home.footer.tagline")}
             </p>
           </div>
-        </div>
+        </Reveal>
 
         {/* Bio + stats */}
-        <div>
+        <Reveal delay={120}>
           <p className="text-primary text-sm font-semibold">
             {t("home.nav.about")}
           </p>
@@ -61,7 +63,7 @@ export function About({ config }) {
               >
                 <s.Icon className="text-primary mx-auto mb-1 size-5" />
                 <div className="text-xl font-bold sm:text-2xl">
-                  {t(`home.about.${s.key}.value`)}
+                  <CountUp key={lang} value={t(`home.about.${s.key}.value`)} />
                 </div>
                 <div className="text-muted-foreground mt-0.5 text-xs">
                   {t(`home.about.${s.key}.label`)}
@@ -69,7 +71,7 @@ export function About({ config }) {
               </div>
             ))}
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
