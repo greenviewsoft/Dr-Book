@@ -27,6 +27,7 @@ import { SiteFooter } from "@/components/home/SiteFooter";
 import { Reveal } from "@/components/common/Reveal";
 import { getDoctorConfig, getHolidays, getCounter, bookAppointment } from "@/features/booking/api";
 import { todayISO, weekdayKey, computeDisplayTime, formatTime, formatLongDate } from "@/lib/datetime";
+import { WEEKDAYS } from "@/lib/constants";
 
 const ERROR_KEYS = {
   NOT_WORKING_DAY: "errors.notWorkingDay",
@@ -105,7 +106,12 @@ export function BookingPage() {
   // issued for this date (0 when the row doesn't exist yet). The Function
   // bumps it atomically with incrementRowColumn(max = daily_limit).
   const weekday = date ? weekdayKey(date) : null;
-  const isWorking = !!config?.working_days?.includes(weekday);
+  // Normalize working_days to valid weekday keys only — guards against a
+  // malformed value (e.g. a stringified array) saved to the doctors row.
+  const workingDays = Array.isArray(config?.working_days)
+    ? config.working_days.filter((d) => WEEKDAYS.includes(d))
+    : [];
+  const isWorking = workingDays.includes(weekday);
   const isHoliday = holidays.some((h) => h.date === date);
   const isPast = date < todayISO();
   const issued = counter?.next_serial ?? 0;

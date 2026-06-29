@@ -1,6 +1,7 @@
 import { Stethoscope, Phone, Clock, CalendarDays, MapPin } from "lucide-react";
 import { useI18n } from "@/i18n/I18nContext";
 import { formatTime } from "@/lib/datetime";
+import { WEEKDAYS } from "@/lib/constants";
 
 const LINKS = [
   { href: "#about", key: "home.nav.about" },
@@ -70,14 +71,16 @@ export function SiteFooter({ config }) {
                 <Phone className="size-4 shrink-0" /> {config.phone}
               </li>
             )}
-            {config?.working_days?.length > 0 && (
-              <li className="flex items-start gap-2">
-                <CalendarDays className="mt-0.5 size-4 shrink-0" />
-                {(config.working_days || [])
-                  .map((d) => t(`days.${d}`))
-                  .join(", ")}
-              </li>
-            )}
+            {Array.isArray(config?.working_days) &&
+              config.working_days.some((d) => WEEKDAYS.includes(d)) && (
+                <li className="flex items-start gap-2">
+                  <CalendarDays className="mt-0.5 size-4 shrink-0" />
+                  {config.working_days
+                    .filter((d) => WEEKDAYS.includes(d))
+                    .map((d) => t(`days.${d}`))
+                    .join(", ")}
+                </li>
+              )}
           </ul>
         </div>
       </div>
